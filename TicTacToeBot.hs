@@ -18,7 +18,7 @@ flattenWithIndex field =
     (index2d field)
   )
 
-findNextTurn field marker = fst (maxPossibilities (map (\pos -> (pos, countPossibleWinsForPosition field pos marker marker)) (getEmptyPositionsForField field)))
+findNextTurn field marker = fst (maxPossibilities (map (\pos -> (pos, countPossibleWinsForPosition field pos marker marker 0)) (getEmptyPositionsForField field)))
 
 maxPossibilities :: [(Position, Int)] -> (Position, Int)
 maxPossibilities (x:[]) = x 
@@ -33,15 +33,15 @@ getEmptyPositionsForField field =
     filter (\(pos, marker) -> marker == Empty) (flattenWithIndex field)
   )
 
-countPossibleWinsForPosition field pos requiredWinner currentPlayer =
+countPossibleWinsForPosition field pos requiredWinner currentPlayer depth =
   if winner == None then
     sum(
-      map (\pos -> countPossibleWinsForPosition newField pos requiredWinner (otherPlayer currentPlayer) )
+      map (\pos -> countPossibleWinsForPosition newField pos requiredWinner (otherPlayer currentPlayer) (depth + 1) )
           (getEmptyPositionsForField newField)
     )
   else if winner == Draw then 0
-  else if (winner == Won requiredWinner) then 1 
-  else -1
+  else if (winner == Won requiredWinner) then 10 - depth
+  else depth - 10
   where  
     newField = setMarkerAtPosition field currentPlayer pos
     winner = won newField
