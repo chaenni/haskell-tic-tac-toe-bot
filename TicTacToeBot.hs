@@ -40,7 +40,7 @@ countPossibleWinsForPosition field pos requiredWinner currentPlayer =
           (getEmptyPositionsForField newField)
     )
   else if winner == Draw then 0
-  else if getWinner winner == requiredWinner then 1 
+  else if (winner == Won requiredWinner) then 1 
   else -1
   where  
     newField = setMarkerAtPosition field currentPlayer pos
