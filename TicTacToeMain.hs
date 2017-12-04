@@ -1,5 +1,6 @@
 import Data.Maybe
 import TicTacToeCommon
+import TicTacToeBot
 
 emptyRow = [Empty, Empty, Empty]
 emptyField = [emptyRow, emptyRow, emptyRow]
@@ -44,27 +45,33 @@ getValidPosition field = do
 
 playGame :: Field -> Marker -> IO ()
 playGame field player = do
-  let winner = won field
-  if winner /= None then
-    do 
-      putStrLn (show winner ++ " won!")
-      return ()
-  else 
+  let winState = won field
+  if winState == None then 
     if player == X then 
       do
         putStrLn "Where do you want to place your mark (e.g. a1)?"
         pos <- getValidPosition field
         let newField = setMarkerAtPosition field X pos
-        putStrLn (showField newField)
+        putStrLn (showField newField) -- TODO: put into function
         playGame newField O
         return ()
     else 
       do
-        playGame field X
-        --pos = findNextTurn field 
+        let pos = findNextTurn field O
+        let newField = setMarkerAtPosition field O pos
+        putStrLn (showField newField) -- TODO: put into function
+        playGame newField X
         return ()
+  else if winState == Draw then
+    do
+      putStrLn "Game ended in a draw!"
+      return ()
+  else
+    do
+      putStrLn (show winState ++ " won!")
+      return ()
 
 main = do
   let field = emptyField
-  putStrLn (showField field)
+  putStrLn (showField field) -- TODO: put into function
   playGame field X

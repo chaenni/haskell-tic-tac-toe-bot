@@ -15,6 +15,9 @@ instance Show Marker where
 
 type Row = [Marker]
 
+otherPlayer X = O
+otherPlayer O = X
+
 showRow :: Row -> String
 showRow [a, b, c] = show a ++ " | " ++ show b ++ " | " ++ show c
 
@@ -29,7 +32,9 @@ showField [a, b, c] =
   "b " ++ showRow b ++ separator ++ 
   "c " ++ showRow c
 
-data Winner = None | Won Marker
+data Winner = None | Won Marker | Draw
+
+getWinner (Won x) = x
 
 instance Eq Winner where
   None == None = True
@@ -39,6 +44,7 @@ instance Eq Winner where
 instance Show Winner where
   show None = "no one"
   show (Won x) = show x
+  show Draw = "draw"
 
 type Position = (Int, Int)
 showPos (x, y) = show x ++ show y
@@ -62,6 +68,8 @@ setMarkerAtPosition field marker (x, y) =
 allEqNotEmpty :: Marker -> Marker -> Marker -> Bool
 allEqNotEmpty a b c = a == b && b == c && a /= Empty
 
+noneEmpty = all ((/=) Empty)
+
 won::Field -> Winner
 won [[a1, a2, a3],
      [b1, b2, b3],
@@ -74,4 +82,5 @@ won [[a1, a2, a3],
                  | allEqNotEmpty a3 b3 c3 = Won a3
                  | allEqNotEmpty a1 b2 c3 = Won a1
                  | allEqNotEmpty a3 b2 c1 = Won a3
+                 | noneEmpty [a1, a2, a3, b1, b2, b3, c1, c2, c3] = Draw
                  | otherwise = None
