@@ -18,14 +18,8 @@ flattenWithIndex field =
     (index2d field)
   )
 
-findNextTurn field marker = fst (maxPossibilities (map (\pos -> (pos, countPossibleWinsForPosition field pos marker marker 0)) (getEmptyPositionsForField field)))
-
-maxPossibilities :: [(Position, Int)] -> (Position, Int)
-maxPossibilities (x:[]) = x 
-maxPossibilities ((pos, count):xs) = 
-  if count > oldCount then (pos, count) else (oldPos, oldCount)
-  where
-    (oldPos, oldCount) = maxPossibilities xs 
+findNextTurn field marker = pos
+  where (pos, _) = minmax field marker marker 0 (0, 0)
 
 getEmptyPositionsForField :: Field -> [Position]
 getEmptyPositionsForField field = 
@@ -33,16 +27,36 @@ getEmptyPositionsForField field =
     filter (\(pos, marker) -> marker == Empty) (flattenWithIndex field)
   )
 
-countPossibleWinsForPosition field pos requiredWinner currentPlayer depth =
-  if winner == None then
-    sum(
-      map (\pos -> countPossibleWinsForPosition newField pos requiredWinner (otherPlayer currentPlayer) (depth + 1) )
-          (getEmptyPositionsForField newField)
-    )
-  else if winner == Draw then 0
-  else if (winner == Won requiredWinner) then 10 - depth
-  else depth - 10
-  where  
-    newField = setMarkerAtPosition field currentPlayer pos
-    winner = won newField
+minmax :: Field -> Marker -> Marker -> Int -> Position -> (Position, Int)
+minmax field requiredWinner currentPlayer depth prevPos = do
+  let winner = won field
+  if winner == None then 
+    do 
+      let availablePositions = getEmptyPositionsForField field
+      let moves = map (\(x, y) -> 
+                          minmax 
+                            (setMarkerAtPosition field currentPlayer (x, y))
+                            requiredWinner 
+                            (otherPlayer currentPlayer) 
+                            (depth + 1) 
+                            (x, y)
+                          ) availablePositions
+      if requiredWinner == currentPlayer then maxScore moves else minScore moves
+  else (prevPos, score winner depth requiredWinner)
 
+score :: Winner -> Int -> Marker -> Int
+score winner depth requiredWinner
+           | winner == Draw = 0
+           | winner == Won requiredWinner = 10 - depth
+           | otherwise = depth - 10
+
+maxScore (x:[]) = x
+maxScore ((pos, score):xs) =
+  if score > oldScore  then (pos, score) else (oldPos, oldScore)
+  where (oldPos, oldScore) = maxScore xs
+
+minScore (x:[]) = x
+minScore ((pos, score):xs) =
+  if score < oldScore then (pos, score) else (oldPos, oldScore)
+  where (oldPos, oldScore) = minScore xs
+  
